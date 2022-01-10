@@ -1,0 +1,23 @@
+{
+  "name": "tllreader",
+  "version": "1.0.0",
+  "description": "a tll reader made for huskie tools LLC",
+  "main": "bin/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Joe Latoria",
+  "license": "ISC",
+  "bin": {
+    "hello": "bin/index.js"
+  },
+  "dependencies": {
+    "boxen": "^4.0.0",
+    "chalk": "^2.4.2",
+    "node-hid": "^2.1.1",
+    "prompt": "^1.1.0",
+    "serialport": "^9.2.0",
+    "sf": "^0.2.0",
+    "usb": "^1.7.1"
+  }
+}

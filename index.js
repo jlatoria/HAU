@@ -32,8 +32,12 @@ var SendData = true;
 var data = {};
 var isPrompt = false;
 var fileData = [];
+var commands = [
+  {command: help, function: "help", args: 0}
+]
 
 
+var lastMessage = '';
 
   // Pipe the data into another stream (like a parser or standard out)
 
@@ -128,6 +132,7 @@ function StartReading() {
   port.on('readable', function () {
 
     var pipe = port.read();
+    lastMessage += pipe;
     //console.log(chalk.magenta('Data Readable') + chalk.grey('>>> ') + pipe);
     AddDataToFile(pipe, "read");
     console.log("Data:",pipe,"ascii: " + pipe);
@@ -157,7 +162,7 @@ function SetUpPort(data,i) {
 
 function CreatePrompt(prmpt) {
   if(!isPrompt){
-  console.log("hi");
+
   isPrompt = true;
   const rl = prompt.createInterface({
   input: process.stdin,
@@ -165,24 +170,40 @@ function CreatePrompt(prmpt) {
   });
 
   rl.question(prmpt, (answer) => {
-    if(answer == "/save") {
+    console.log("DEBUG > " + answer);
+
+    if(answer.includes('/')) {
+      CommandParse(answer);
+    } else {
+    port.write(answer);
+    AddDataToFile(answer, "write");
+  }
+
+
+      /*
       SaveData();
     } else if (answer == "/stop") {
       if(LogData) {
       SaveAndShutdown();
+    }
+    } else if (answer == "/echo") {
+      console.log("[ECHO]" + lastMessage);
+      port.write(lastMessage);
+      console.log("[ECHO] Clearing Last Message");
+      lastMessage = "";
+
     } else if (answer == "/clear") {
         ClearTitle();
-
     } else {
     port.write(answer);
     AddDataToFile(answer, "write");
-    }
+  }*/
 
-    rl.close();
-    isPrompt = false;
-    CreatePrompt("Enter Data To Send: ");
-}
 
+
+rl.close();
+isPrompt = false;
+CreatePrompt("Enter Data To Send: ");
   });
 }
 }
@@ -223,4 +244,24 @@ function SaveAndShutdown() {
 
 function Shutdown() {
   process.exit(1);
+}
+
+function Gaming() {
+
+}
+
+function CommandParse(cmdStr) {
+  var args = [];
+  var lastPos = 0;
+  for(var i = 0; i < cmdStr.length; i++) {
+    if(cmdStr.charAt(i) == ' ') {
+      args.push(cmdStr.slice(lastPos, i - 1));
+      lastPos = i + 1;
+    }
+  }
+  FindCommand(args);
+}
+
+function FindCommand(args) {
+  
 }

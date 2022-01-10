@@ -15,6 +15,9 @@ var mode = chalk.yellow("Raw Data Mode \n");
 var warning = chalk.red("WARNING FOR TESTING PURPOSES ONLY! \n");
 var log;
 var port;
+
+var echoList = "";
+
 const HID = require("node-hid");
 
 const boxenOptions = {
@@ -32,9 +35,7 @@ var SendData = true;
 var data = {};
 var isPrompt = false;
 var fileData = [];
-var commands = [
-  {command: help, function: "help", args: 0}
-]
+
 
 
 var lastMessage = '';
@@ -134,7 +135,7 @@ function StartReading() {
     var pipe = port.read();
     lastMessage += pipe;
     //console.log(chalk.magenta('Data Readable') + chalk.grey('>>> ') + pipe);
-    AddDataToFile(pipe, "read");
+
     console.log("Data:",pipe,"ascii: " + pipe);
 
     if(SendData) {
@@ -170,34 +171,16 @@ function CreatePrompt(prmpt) {
   });
 
   rl.question(prmpt, (answer) => {
-    console.log("DEBUG > " + answer);
+
 
     if(answer.includes('/')) {
       CommandParse(answer);
     } else {
     port.write(answer);
-    AddDataToFile(answer, "write");
+
   }
 
 
-      /*
-      SaveData();
-    } else if (answer == "/stop") {
-      if(LogData) {
-      SaveAndShutdown();
-    }
-    } else if (answer == "/echo") {
-      console.log("[ECHO]" + lastMessage);
-      port.write(lastMessage);
-      console.log("[ECHO] Clearing Last Message");
-      lastMessage = "";
-
-    } else if (answer == "/clear") {
-        ClearTitle();
-    } else {
-    port.write(answer);
-    AddDataToFile(answer, "write");
-  }*/
 
 
 
@@ -209,31 +192,21 @@ CreatePrompt("Enter Data To Send: ");
 }
 
 
-function AddDataToFile(databuffer, datatype) {
-    var dataObj = {
-      time: performance.now(),
-      data: databuffer,
-      type: datatype
-    }
 
-    fileData.push(dataObj);
+function SaveData(data) {
+  let now = new Date();
+  echoList += "[H"+ now.getHours() + ":M" + now.getMinutes() + ":S" + now.getSeconds() + "] [ECHO] <" + lastMessage.toString('hex') + "> " + lastMessage + "\n";
+
 }
 
-function SaveData() {
-  try {
-  var filename = Date.now() + ".json";
-  const data = fs.writeFileSync( filename , JSON.stringify(fileData))
-  console.log("Data Saved As " + filename);
-  //file written successfully
-} catch (err) {
-  console.error(err)
-}
-}
+
 
 function SaveAndShutdown() {
+
+
   try {
-  var filename = Date.now() + ".json";
-  const data = fs.writeFileSync( filename , JSON.stringify(fileData))
+  var filename = Date.now() + ".txt";
+  const data = fs.writeFileSync( filename , echoList);
   console.log("Data Saved As " + filename);
   Shutdown();
   //file written successfully
@@ -242,26 +215,77 @@ function SaveAndShutdown() {
 }
 }
 
+
+//Closes The Program
 function Shutdown() {
   process.exit(1);
 }
 
-function Gaming() {
+
+//Echos The Data Last Received Clears Data Once Called
+function Echo() {
+  if(lastMessage != '') {
+    console.log("[ECHO] " + lastMessage);
+    port.write(lastMessage);
+    console.log("[ECHO] Clearing Last Message");
+    SaveData();
+    lastMessage = "";
+  } else {
+    console.log("[ECHO] Echo Buffer Empty, No Recent Data")
+  }
+}
+
+
+//Write A String To The Tool
+function Write(str) {
+  port.write(answer);
 
 }
+
+//Clears The Console Only, Logs Are Kept
+function ClearConsole() {
+  ClearTitle();
+}
+
+
+
+//Takes A Raw String And Breaks It Into An Array Based On Spaces
 
 function CommandParse(cmdStr) {
   var args = [];
   var lastPos = 0;
+  var cmd = cmdStr;
+
   for(var i = 0; i < cmdStr.length; i++) {
     if(cmdStr.charAt(i) == ' ') {
-      args.push(cmdStr.slice(lastPos, i - 1));
+      if(args.length == 0) {
+        cmd = mdStr.slice(lastPos, i - 1);
+      } else {
+        args.push(cmdStr.slice(lastPos, i - 1));
+      }
+
       lastPos = i + 1;
     }
   }
-  FindCommand(args);
+
+
+  FindCommand(cmd,args);
 }
 
-function FindCommand(args) {
-  
+function FindCommand(cmd, args) {
+
+  if(cmd != '') {
+  cmd = cmd.replace("/", "");
+  switch(cmd) {
+    case "echo":
+      Echo();
+    break;
+    case "stop":
+      SaveAndShutdown();
+    break;
+    default:
+    console.log("Error: Command /" + cmd + " Is Not Recognized");
+  }
+}
+
 }

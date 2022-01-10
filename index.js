@@ -89,7 +89,12 @@ const { portStatus, portList } = listPorts(DebugMode);
 }
 
 function FindDevice(data) {
+/* PLEASE FIX
 
+Possible issues relating the notation on linux vs windows, should be agnostic of capilization, store as hex
+or ignore case;
+
+*/
   for (var i = 0; i < data.length; i++) {
     if(data[i].productId == 'ea60') {
       console.log(chalk.green("Success! ") + "Device Found!");
@@ -142,7 +147,9 @@ function StartReading() {
 
 function SetUpPort(data,i) {
   var sPortName = data[i].path;
-  port = new SerialPort(sPortName);
+  port = new SerialPort(sPortName, {
+  baudRate: 4800
+})
   var lineStream = port.pipe(new Readline());
   console.log("Port has Been Set To: " + sPortName);
 }
@@ -164,8 +171,8 @@ function CreatePrompt(prmpt) {
       if(LogData) {
       SaveAndShutdown();
     } else if (answer == "/clear") {
-        ClearTitle();    
-    
+        ClearTitle();
+
     } else {
     port.write(answer);
     AddDataToFile(answer, "write");

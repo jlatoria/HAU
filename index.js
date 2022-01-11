@@ -101,7 +101,7 @@ or ignore case;
 
 */
   for (var i = 0; i < data.length; i++) {
-    if(data[i].productId == 'ea60') {
+    if(data[i].productId == 'EA60') {
       console.log(chalk.green("Success! ") + "Device Found!");
       SetUpPort(data,i);
       setTimeout(function () {
@@ -195,11 +195,22 @@ CreatePrompt("Enter Data To Send: ");
 
 function SaveData(data) {
   let now = new Date();
-  echoList += "[H"+ now.getHours() + ":M" + now.getMinutes() + ":S" + now.getSeconds() + "] [ECHO] <" + lastMessage.toString('hex') + "> " + lastMessage + "\n";
+  const buff = Buffer.from(lastMessage, "utf-8");
+  echoList += "[H"+ now.getHours() + ":M" + now.getMinutes() + ":S" + now.getSeconds() + "] [ECHO] " + buff.inspect() + " " + lastMessage + "\n";
 
 }
 
+String.prototype.hexEncode = function() {
+    var hex, i;
 
+    var result = "";
+    for (i=0; i<this.length; i++) {
+        hex = this.charCodeAt(i).toString(16);
+        result += ("000"+hex).slice(-4);
+    }
+
+    return result
+}
 
 function SaveAndShutdown() {
 

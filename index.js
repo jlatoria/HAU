@@ -36,9 +36,14 @@ var data = {};
 var isPrompt = false;
 var fileData = [];
 
+var timeout;
 
+var pairs = {};
 
 var lastMessage = '';
+var storeBuffer;
+var activeCreatePair = false;
+
 
   // Pipe the data into another stream (like a parser or standard out)
 
@@ -134,6 +139,19 @@ function StartReading() {
 
     var pipe = port.read();
     lastMessage += pipe;
+    if(timeout != undefined) {
+      clearTimeout(timeout);
+      timeout =  setTimeout(() => {
+        console.log("done");
+
+      }, 1000);
+    } else {
+      timeout =  setTimeout(() => {
+
+        console.log("done");
+      }, 1000);
+    }
+
     //console.log(chalk.magenta('Data Readable') + chalk.grey('>>> ') + pipe);
 
     console.log("Data:",pipe,"ascii: " + pipe);
@@ -148,6 +166,45 @@ function StartReading() {
 
 
 
+}
+
+
+function CreatePair() {
+  activeCreatePair = true;
+  console.log("[PAIRS] Creating Key Pair: Please Activate Prgrogammer Then Wait Till Buffer Is Stored.");
+  console.log("[PAIRS] Once Buffer Is Stored Console Will Say Done. Then Type '/pair store'for next instructions");
+
+
+}
+
+function Storebuffer() {
+  if(activeCreatePair) {
+    if(lastMessage != "") {
+      storeBuffer = new Buffer.from(lastMessage, "utf-8");
+      lastMessage = "";
+      console.log("[PAIRS] "+ storeBuffer.inspect() " Has Been Stored As Pair One");
+      console.log("[PAIRS] Will Await Next Input Buffer Once Done. Type '/pair finish' ");
+    } else {
+      console.log("[PAIRS] Last Message Is Empty Ensure A Buffer Has Finished Before Retrying");
+    }
+  } else {
+    console.log("[PAIRS] No Active Pair Creation. Please Type '/pair create first!'");
+  }
+}
+
+function FinishPair() {
+  if(activeCreatePair) {
+    if(storeBuffer != undefined) {
+      const tempBuffer = new Buffer.from(lastMessage, "hex");
+      pairs[storeBuffer.toString()] = tempBuffer;
+      console.log("[PAIRS] KEYPAIR ADDED: " + storeBuffer.toString() + " : " + tempBuffer.toString());
+      activeCreatePair = false;
+      console.log("[PAIRS] EXITING PAIRS! BUFFERS WILL BE CLEARED!");
+      lastMessage = "";
+    }
+  } else {
+    console.log("[PAIRS] No Active Pair Creation. Please Type '/pair create' first!");
+  }
 }
 
 

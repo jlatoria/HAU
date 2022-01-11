@@ -106,7 +106,7 @@ or ignore case;
 
 */
   for (var i = 0; i < data.length; i++) {
-    if(data[i].productId == 'EA60') {
+    if(data[i].productId == 'ea60') {
       console.log(chalk.green("Success! ") + "Device Found!");
       SetUpPort(data,i);
       setTimeout(function () {
@@ -182,7 +182,7 @@ function Storebuffer() {
     if(lastMessage != "") {
       storeBuffer = new Buffer.from(lastMessage, "utf-8");
       lastMessage = "";
-      console.log("[PAIRS] "+ storeBuffer.inspect() " Has Been Stored As Pair One");
+      console.log("[PAIRS] "+ storeBuffer.inspect() + " Has Been Stored As Pair One");
       console.log("[PAIRS] Will Await Next Input Buffer Once Done. Type '/pair finish' ");
     } else {
       console.log("[PAIRS] Last Message Is Empty Ensure A Buffer Has Finished Before Retrying");
@@ -201,10 +201,15 @@ function FinishPair() {
       activeCreatePair = false;
       console.log("[PAIRS] EXITING PAIRS! BUFFERS WILL BE CLEARED!");
       lastMessage = "";
+      ListPairs();
     }
   } else {
     console.log("[PAIRS] No Active Pair Creation. Please Type '/pair create' first!");
   }
+}
+
+function ListPairs() {
+  console.log(pairs);
 }
 
 
@@ -231,11 +236,13 @@ function CreatePrompt(prmpt) {
 
 
     if(answer.includes('/')) {
+
       CommandParse(answer);
     } else {
-    port.write(answer);
+      port.write(answer);
+    }
 
-  }
+
 
 
 
@@ -320,19 +327,22 @@ function ClearConsole() {
 //Takes A Raw String And Breaks It Into An Array Based On Spaces
 
 function CommandParse(cmdStr) {
+
   var args = [];
   var lastPos = 0;
   var cmd = cmdStr;
 
   for(var i = 0; i < cmdStr.length; i++) {
     if(cmdStr.charAt(i) == ' ') {
-      if(args.length == 0) {
-        cmd = mdStr.slice(lastPos, i - 1);
+      if(cmd == cmdStr && args.length == 0) {
+        cmd = cmdStr.slice(lastPos, i);
       } else {
-        args.push(cmdStr.slice(lastPos, i - 1));
+        args.push(cmdStr.slice(lastPos + 1, i));
       }
 
-      lastPos = i + 1;
+      lastPos = i;
+    } else if (i == cmdStr.length -1 && cmd != cmdStr) {
+      args.push(cmdStr.slice(lastPos + 1, cmdStr.length));
     }
   }
 
@@ -341,12 +351,23 @@ function CommandParse(cmdStr) {
 }
 
 function FindCommand(cmd, args) {
-
+  console.log(args);
   if(cmd != '') {
   cmd = cmd.replace("/", "");
   switch(cmd) {
     case "echo":
       Echo();
+    break;
+    case "pairs":
+      if(args[0] == "create") {
+        CreatePair();
+      } else if (args[0] == "store") {
+        Storebuffer();
+      } else if (args[0] == "finish") {
+        FinishPair();
+      } else {
+        console.log("[PAIRS] Unrecognized Sub-Command '" + args[0] + "' Options Are: create, store, or finish" )
+      }
     break;
     case "stop":
       SaveAndShutdown();

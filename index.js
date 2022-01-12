@@ -31,10 +31,12 @@ var DataMode = "RAW";
 var LogData = true;
 var DebugMode = true;
 var SendData = true;
+var newMessage = true;
 
 var data = {};
 var isPrompt = false;
 var fileData = [];
+
 
 var timeout;
 
@@ -106,7 +108,7 @@ or ignore case;
 
 */
   for (var i = 0; i < data.length; i++) {
-    if(data[i].productId == 'ea60') {
+    if(data[i].productId == 'EA60') {
       console.log(chalk.green("Success! ") + "Device Found!");
       SetUpPort(data,i);
       setTimeout(function () {
@@ -137,28 +139,35 @@ function StartReading() {
   }// Read data that is available but keep the stream in "paused mode"
   port.on('readable', function () {
 
+    if(newMessage) {
+      newMessage = false;
+      lastMessage = "";
+    }
+
     var pipe = port.read();
     lastMessage += pipe;
     if(timeout != undefined) {
       clearTimeout(timeout);
       timeout =  setTimeout(() => {
-        console.log("done");
-
-      }, 1000);
+        console.log(chalk.magenta('\nData Readable ') + chalk.grey('>>> ') + lastMessage);
+        CheckPairs();
+        newMessage = true;
+      }, 100);
     } else {
       timeout =  setTimeout(() => {
 
-        console.log("done");
-      }, 1000);
+        console.log(chalk.magenta('\nData Readable ') + chalk.grey('>>> ') + lastMessage);
+        CheckPairs();
+        newMessage = true;
+      }, 100);
     }
+
 
     //console.log(chalk.magenta('Data Readable') + chalk.grey('>>> ') + pipe);
 
-    console.log("Data:",pipe,"ascii: " + pipe);
 
-    if(SendData) {
     CreatePrompt("Enter Data To Send: ");
-  }
+
 
   });
 
@@ -168,6 +177,16 @@ function StartReading() {
 
 }
 
+function CheckPairs() {
+  var temp = pairs[lastMessage];
+  if(temp != undefined) {
+    console.log("[PAIRS] Keypair Found! Sending: " + temp.inspect());
+    port.write(lastMessage);
+  } else {
+
+      CreatePrompt("Enter Data To Send: ");
+  }
+}
 
 function CreatePair() {
   activeCreatePair = true;
@@ -181,7 +200,7 @@ function Storebuffer() {
   if(activeCreatePair) {
     if(lastMessage != "") {
       storeBuffer = new Buffer.from(lastMessage, "utf-8");
-      lastMessage = "";
+    
       console.log("[PAIRS] "+ storeBuffer.inspect() + " Has Been Stored As Pair One");
       console.log("[PAIRS] Will Await Next Input Buffer Once Done. Type '/pair finish' ");
     } else {
@@ -302,9 +321,9 @@ function Echo() {
   if(lastMessage != '') {
     console.log("[ECHO] " + lastMessage);
     port.write(lastMessage);
-    console.log("[ECHO] Clearing Last Message");
+
     SaveData();
-    lastMessage = "";
+
   } else {
     console.log("[ECHO] Echo Buffer Empty, No Recent Data")
   }
@@ -351,7 +370,7 @@ function CommandParse(cmdStr) {
 }
 
 function FindCommand(cmd, args) {
-  console.log(args);
+
   if(cmd != '') {
   cmd = cmd.replace("/", "");
   switch(cmd) {

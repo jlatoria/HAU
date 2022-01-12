@@ -1,0 +1,2 @@
+[H21:M5:S59] [ECHO] <Buffer 2a 30 31 41 43 43 0d> *01ACC
+[H21:M8:S5] [ECHO] <Buffer 2a 30 31 41 43 43 0d> *01ACC
